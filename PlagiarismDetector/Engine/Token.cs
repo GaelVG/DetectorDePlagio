@@ -1,23 +1,28 @@
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Represents a single token produced by the Lexer.
-    /// A token is a meaningful unit extracted from the character stream.
+    /// Representa un token individual producido por el Analizador Léxico.
+    /// Un token es la unidad significativa mínima extraída del texto fuente.
     /// </summary>
     public class Token
     {
-        public TokenType Type     { get; }
-        public string    Value    { get; }
-        public int       Position { get; }   // character offset in source text
+        /// <summary>Categoría del token según el Alfabeto Σ.</summary>
+        public TipoToken Tipo { get; }
 
-        public Token(TokenType type, string value, int position)
+        /// <summary>Valor léxico (texto original del token).</summary>
+        public string Valor { get; }
+
+        /// <summary>Posición del token en el texto fuente (desplazamiento de carácter).</summary>
+        public int Posicion { get; }
+
+        public Token(TipoToken tipo, string valor, int posicion)
         {
-            Type     = type;
-            Value    = value;
-            Position = position;
+            Tipo     = tipo;
+            Valor    = valor;
+            Posicion = posicion;
         }
 
         public override string ToString()
-            => $"[{Type}] \"{Value}\" @{Position}";
+            => $"[{Tipo}] \"{Valor}\" @{Posicion}";
     }
 }

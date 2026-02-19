@@ -1,16 +1,17 @@
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Categories of tokens produced by the Lexer (Análisis Léxico).
+    /// Categorías de tokens producidos por el Analizador Léxico.
+    /// Cada categoría corresponde a un grupo del Alfabeto Σ.
     /// </summary>
-    public enum TokenType
+    public enum TipoToken
     {
-        Word,           // sequence of letters (a-z, A-Z) — words
-        Number,         // sequence of digits (0-9)
-        SpecialChar,    // + - * / = ( ) { } ; , _
-        Whitespace,     // space, tab, newline
-        StringLiteral,  // "text inside quotes"
-        Boolean,        // #t or #f
-        Unknown         // character NOT in Σ (e.g. @, $, #, etc.)
+        Palabra,           // Secuencia de letras (a-z, A-Z)
+        Numero,            // Secuencia de dígitos (0-9)
+        CaracterEspecial,  // + - * / = ( ) { } ; , _
+        EspacioBlanco,     // Espacio, tabulación, salto de línea
+        CadenaTexto,       // "texto entre comillas"
+        Booleano,          // #t o #f
+        Desconocido        // Carácter que no pertenece al Σ
     }
 }

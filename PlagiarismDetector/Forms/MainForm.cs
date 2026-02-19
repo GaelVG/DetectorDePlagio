@@ -5,191 +5,183 @@ using PlagiarismDetector.Resources;
 
 namespace PlagiarismDetector.Forms
 {
-    public class MainForm : Form
+    /// <summary>
+    /// Formulario principal de la aplicación.
+    /// Contiene la barra lateral de navegación y el área de contenido
+    /// con los tres paneles: Analizador, Alfabeto y Acerca de.
+    /// </summary>
+    public class FormularioPrincipal : Form
     {
-        private Panel   _sidebar     = null!;
-        private Panel   _contentArea = null!;
+        // ─── Paneles de navegación y contenido ────────────────────────────────
+        private Panel _barraLateral  = null!;
+        private Panel _areaContenido = null!;
 
-        // Panels
-        private AnalyzerPanel  _analyzerPanel  = null!;
-        private AlphabetPanel  _alphabetPanel  = null!;
-        private AboutPanel     _aboutPanel     = null!;
+        // ─── Paneles de contenido ─────────────────────────────────────────────
+        private PanelAnalizador _panelAnalizador = null!;
+        private PanelAlfabeto   _panelAlfabeto   = null!;
+        private PanelAcercaDe   _panelAcercaDe   = null!;
 
-        // Nav buttons
-        private Button _btnAnalyzer = null!;
-        private Button _btnAlphabet = null!;
-        private Button _btnAbout    = null!;
-        private Button _activeBtn   = null!;
+        // ─── Botones de navegación ─────────────────────────────────────────────
+        private Button _btnAnalizador = null!;
+        private Button _btnAlfabeto   = null!;
+        private Button _btnAcercaDe   = null!;
+        private Button _btnActivo     = null!;
 
-        public MainForm()
+        public FormularioPrincipal()
         {
             Text            = "Sistema Detector de Plagio";
             Size            = new Size(1100, 740);
             MinimumSize     = new Size(960, 680);
             StartPosition   = FormStartPosition.CenterScreen;
-            BackColor       = AppStyles.BgDark;
+            BackColor       = EstilosApp.FondoOscuro;
             FormBorderStyle = FormBorderStyle.Sizable;
             Icon            = SystemIcons.Application;
 
-            BuildLayout();
-            ShowPanel(_analyzerPanel, _btnAnalyzer);
+            ConstruirDisposicion();
+            MostrarPanel(_panelAnalizador, _btnAnalizador);
         }
 
-        private void BuildLayout()
+        // ─── Construcción de la interfaz ───────────────────────────────────────
+        private void ConstruirDisposicion()
         {
-            // ── Sidebar ─────────────────────────────────────────────────────
-            _sidebar = new Panel
+            // ── Barra lateral ────────────────────────────────────────────────
+            _barraLateral = new Panel
             {
-                Width     = AppStyles.SidebarWidth,
+                Width     = EstilosApp.AnchoBarraLateral,
                 Dock      = DockStyle.Left,
-                BackColor = AppStyles.Sidebar
+                BackColor = EstilosApp.BarraLateral
             };
 
-            // Logo / app name
-            var logoPanel = new Panel
+            // Logo / nombre de la app
+            var panelLogo = new Panel
             {
                 Height    = 80,
                 Dock      = DockStyle.Top,
-                BackColor = AppStyles.BgPanel,
-                Padding   = new Padding(16, 0, 0, 0)
+                BackColor = EstilosApp.FondoPanel
             };
-            logoPanel.Controls.Add(new Label
+            panelLogo.Controls.Add(new Label
             {
-                Text      = "🔎",
-                Font      = new Font("Segoe UI", 22f),
-                ForeColor = AppStyles.Accent,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(14, 8)
+                Text = "🔎", Font = new Font("Segoe UI", 22f),
+                ForeColor = EstilosApp.Acento, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(14, 8)
             });
-            logoPanel.Controls.Add(new Label
+            panelLogo.Controls.Add(new Label
             {
-                Text      = "Detector\nde Plagio",
-                Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
-                ForeColor = AppStyles.TextPrimary,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(50, 16)
+                Text = "Detector\nde Plagio",
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                ForeColor = EstilosApp.TextoPrimario, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(50, 16)
             });
-            _sidebar.Controls.Add(logoPanel);
+            _barraLateral.Controls.Add(panelLogo);
 
-            // Nav section label
-            var navSection = new Label
+            // Etiqueta de sección
+            _barraLateral.Controls.Add(new Label
             {
-                Text      = "NAVEGACIÓN",
-                Font      = new Font("Segoe UI", 7.5f),
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(14, 96)
-            };
-            _sidebar.Controls.Add(navSection);
-
-            // Nav buttons
-            _btnAnalyzer = NavButton("🔍  Analizar",   120);
-            _btnAlphabet = NavButton("Σ  Alfabeto",    160);
-            _btnAbout    = NavButton("ℹ️  Acerca de",  200);
-
-            _btnAnalyzer.Click += (_, _) => ShowPanel(_analyzerPanel, _btnAnalyzer);
-            _btnAlphabet.Click += (_, _) => ShowPanel(_alphabetPanel, _btnAlphabet);
-            _btnAbout.Click    += (_, _) => ShowPanel(_aboutPanel,    _btnAbout);
-
-            _sidebar.Controls.Add(_btnAnalyzer);
-            _sidebar.Controls.Add(_btnAlphabet);
-            _sidebar.Controls.Add(_btnAbout);
-
-            // Version footer
-            _sidebar.Controls.Add(new Label
-            {
-                Text      = "v1.0  –  .NET 8",
-                Font      = AppStyles.FontSmall,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(14, 680)
+                Text = "NAVEGACIÓN", Font = new Font("Segoe UI", 7.5f),
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(14, 96)
             });
 
-            // ── Content area ────────────────────────────────────────────────
-            _contentArea = new Panel
+            // Botones de navegación
+            _btnAnalizador = BotonNavegacion("🔍  Analizar",    120);
+            _btnAlfabeto   = BotonNavegacion("Σ  Alfabeto",     160);
+            _btnAcercaDe   = BotonNavegacion("ℹ️  Acerca de",  200);
+
+            _btnAnalizador.Click += (_, _) => MostrarPanel(_panelAnalizador, _btnAnalizador);
+            _btnAlfabeto.Click   += (_, _) => MostrarPanel(_panelAlfabeto,   _btnAlfabeto);
+            _btnAcercaDe.Click   += (_, _) => MostrarPanel(_panelAcercaDe,   _btnAcercaDe);
+
+            _barraLateral.Controls.Add(_btnAnalizador);
+            _barraLateral.Controls.Add(_btnAlfabeto);
+            _barraLateral.Controls.Add(_btnAcercaDe);
+
+            // Versión al pie
+            _barraLateral.Controls.Add(new Label
+            {
+                Text = "v1.0  –  .NET 8", Font = EstilosApp.FuentePequena,
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(14, 680)
+            });
+
+            // ── Área de contenido ────────────────────────────────────────────
+            _areaContenido = new Panel
             {
                 Dock      = DockStyle.Fill,
-                BackColor = AppStyles.BgDark,
-                Padding   = new Padding(0)
+                BackColor = EstilosApp.FondoOscuro
             };
 
-            // ── Header bar ──────────────────────────────────────────────────
-            var headerBar = new Panel
+            // Barra de encabezado superior
+            var barraEncabezado = new Panel
             {
                 Height    = 42,
                 Dock      = DockStyle.Top,
-                BackColor = AppStyles.BgPanel,
-                Padding   = new Padding(20, 0, 0, 0)
+                BackColor = EstilosApp.FondoPanel
             };
-            headerBar.Controls.Add(new Label
+            barraEncabezado.Controls.Add(new Label
             {
-                Text      = "Sistema Detector de Plagio  |  Área: Tecnología – Compilador",
-                Font      = AppStyles.FontSmall,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(20, 12)
+                Text = "Sistema Detector de Plagio  |  Área: Tecnología – Compilador",
+                Font = EstilosApp.FuentePequena, ForeColor = EstilosApp.TextoSecundario,
+                BackColor = Color.Transparent, AutoSize = true,
+                Location = new Point(20, 12)
             });
-            _contentArea.Controls.Add(headerBar);
+            _areaContenido.Controls.Add(barraEncabezado);
 
-            // ── Create panels ────────────────────────────────────────────────
-            _analyzerPanel = new AnalyzerPanel { Visible = false, Dock = DockStyle.Fill };
-            _alphabetPanel = new AlphabetPanel { Visible = false, Dock = DockStyle.Fill };
-            _aboutPanel    = new AboutPanel    { Visible = false, Dock = DockStyle.Fill };
+            // ── Crear paneles de contenido ────────────────────────────────────
+            _panelAnalizador = new PanelAnalizador { Visible = false, Dock = DockStyle.Fill };
+            _panelAlfabeto   = new PanelAlfabeto   { Visible = false, Dock = DockStyle.Fill };
+            _panelAcercaDe   = new PanelAcercaDe   { Visible = false, Dock = DockStyle.Fill };
 
-            _contentArea.Controls.Add(_analyzerPanel);
-            _contentArea.Controls.Add(_alphabetPanel);
-            _contentArea.Controls.Add(_aboutPanel);
+            _areaContenido.Controls.Add(_panelAnalizador);
+            _areaContenido.Controls.Add(_panelAlfabeto);
+            _areaContenido.Controls.Add(_panelAcercaDe);
 
-            Controls.Add(_contentArea);
-            Controls.Add(_sidebar);
+            Controls.Add(_areaContenido);
+            Controls.Add(_barraLateral);
         }
 
-        private void ShowPanel(Panel panel, Button navBtn)
+        // ─── Navegación entre paneles ──────────────────────────────────────────
+        private void MostrarPanel(Panel panel, Button btnNav)
         {
-            // Hide all
-            _analyzerPanel.Visible = false;
-            _alphabetPanel.Visible = false;
-            _aboutPanel.Visible    = false;
+            // Ocultar todos los paneles
+            _panelAnalizador.Visible = false;
+            _panelAlfabeto.Visible   = false;
+            _panelAcercaDe.Visible   = false;
 
-            // Reset previous active style
-            if (_activeBtn != null)
+            // Restablecer estilo del botón anterior
+            if (_btnActivo != null)
             {
-                _activeBtn.BackColor = Color.Transparent;
-                _activeBtn.ForeColor = AppStyles.TextSecond;
+                _btnActivo.BackColor = Color.Transparent;
+                _btnActivo.ForeColor = EstilosApp.TextoSecundario;
             }
 
-            // Show selected
-            panel.Visible   = true;
+            // Mostrar el panel seleccionado y resaltar botón
+            panel.Visible     = true;
             panel.BringToFront();
-            navBtn.BackColor = AppStyles.Accent;
-            navBtn.ForeColor = AppStyles.TextPrimary;
-            _activeBtn       = navBtn;
+            btnNav.BackColor  = EstilosApp.Acento;
+            btnNav.ForeColor  = EstilosApp.TextoPrimario;
+            _btnActivo        = btnNav;
         }
 
-        private Button NavButton(string text, int top)
+        // ─── Crear botón de navegación ─────────────────────────────────────────
+        private Button BotonNavegacion(string texto, int posicionSuperior)
         {
-            var btn = new Button
+            var boton = new Button
             {
-                Text      = text,
-                Font      = AppStyles.FontBody,
-                ForeColor = AppStyles.TextSecond,
+                Text      = texto,
+                Font      = EstilosApp.FuenteCuerpo,
+                ForeColor = EstilosApp.TextoSecundario,
                 BackColor = Color.Transparent,
                 FlatStyle = FlatStyle.Flat,
-                Width     = AppStyles.SidebarWidth,
+                Width     = EstilosApp.AnchoBarraLateral,
                 Height    = 40,
-                Location  = new Point(0, top),
+                Location  = new Point(0, posicionSuperior),
                 TextAlign = ContentAlignment.MiddleLeft,
                 Padding   = new Padding(14, 0, 0, 0),
                 Cursor    = Cursors.Hand
             };
-            btn.FlatAppearance.BorderSize           = 0;
-            btn.FlatAppearance.MouseOverBackColor   = AppStyles.BgCard;
-            return btn;
+            boton.FlatAppearance.BorderSize          = 0;
+            boton.FlatAppearance.MouseOverBackColor  = EstilosApp.FondoTarjeta;
+            return boton;
         }
     }
 }

@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -10,412 +8,377 @@ using PlagiarismDetector.Resources;
 
 namespace PlagiarismDetector.Forms
 {
-    public class AnalyzerPanel : Panel
+    /// <summary>
+    /// Panel principal de análisis de plagio.
+    /// Permite cargar o pegar dos documentos, analizarlos y ver los resultados
+    /// de similitud con métricas detalladas y lista de coincidencias.
+    /// </summary>
+    public class PanelAnalizador : Panel
     {
-        // ── Document slots ───────────────────────────────────────────────────
-        private ProcessedDocument? _docA, _docB;
+        // ─── Documentos procesados ─────────────────────────────────────────────
+        private DocumentoProcesado? _documentoA, _documentoB;
 
-        private Label   _labelA = null!,    _labelB = null!;
-        private Button  _btnLoadA = null!,  _btnLoadB = null!;
-        private TextBox _textA = null!,     _textB = null!;
-        private Button  _btnAnalyze = null!;
+        // ─── Controles de carga ────────────────────────────────────────────────
+        private Label   _etiquetaA = null!,    _etiquetaB = null!;
+        private Button  _btnCargarA = null!,   _btnCargarB = null!;
+        private TextBox _textoA = null!,       _textoB = null!;
+        private Button  _btnAnalizar = null!;
 
-        // ── Result widgets ────────────────────────────────────────────────
-        private Panel   _resultCard   = null!;
-        private Label   _scoreLbl     = null!;
-        private Label   _verdictLbl   = null!;
-        private Label   _cosLbl       = null!;
-        private Label   _jacLbl       = null!;
-        private Label   _biLbl        = null!;
-        private Label   _triLbl       = null!;
-        private ListBox _commonWordsBox  = null!;
-        private ListBox _commonBigramBox = null!;
-        private ListBox _tokenListA      = null!;
-        private ListBox _tokenListB      = null!;
+        // ─── Controles de resultados ───────────────────────────────────────────
+        private Panel   _tarjetaResultado  = null!;
+        private Label   _etiqPuntuacion    = null!;
+        private Label   _etiqVeredicto     = null!;
+        private Label   _etiqCoseno        = null!;
+        private Label   _etiqJaccard       = null!;
+        private Label   _etiqBigramas      = null!;
+        private Label   _etiqTrigramas     = null!;
+        private ListBox _listaPalabrasComunes  = null!;
+        private ListBox _listaBigramasComunes  = null!;
+        private ListBox _listaTokensA          = null!;
+        private ListBox _listaTokensB          = null!;
 
-        public AnalyzerPanel()
+        public PanelAnalizador()
         {
-            BackColor  = AppStyles.BgDark;
+            BackColor  = EstilosApp.FondoOscuro;
             Dock       = DockStyle.Fill;
             AutoScroll = true;
-            BuildUI();
+            ConstruirUI();
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // Build the UI layout
-        // ─────────────────────────────────────────────────────────────────────
-
-        private void BuildUI()
+        private void ConstruirUI()
         {
-            int pad = 20;
+            int margen = 20;
 
-            // ── Page title ──────────────────────────────────────────────────
-            var title = new Label
+            // ── Título de la página ─────────────────────────────────────────
+            Controls.Add(new Label
             {
-                Text      = "Analizador de Plagio",
-                Font      = AppStyles.FontTitle,
-                ForeColor = AppStyles.Accent,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(pad, pad)
-            };
-            Controls.Add(title);
+                Text = "Analizador de Plagio", Font = EstilosApp.FuenteTitulo,
+                ForeColor = EstilosApp.Acento, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(margen, margen)
+            });
 
-            var sub = new Label
+            Controls.Add(new Label
             {
-                Text      = "Carga dos documentos y presiona «Analizar» para detectar similitudes.",
-                Font      = AppStyles.FontBody,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(pad, pad + 36)
-            };
-            Controls.Add(sub);
+                Text = "Carga dos documentos y presiona «Analizar» para detectar similitudes.",
+                Font = EstilosApp.FuenteCuerpo, ForeColor = EstilosApp.TextoSecundario,
+                BackColor = Color.Transparent, AutoSize = true,
+                Location = new Point(margen, margen + 36)
+            });
 
-            // ── Document A card ─────────────────────────────────────────────
-            var cardA = MakeDocCard("Documento A", out _labelA, out _btnLoadA, out _textA);
-            cardA.Location = new Point(pad, 90);
-            Controls.Add(cardA);
+            // ── Tarjeta Documento A ─────────────────────────────────────────
+            var tarjetaA = CrearTarjetaDocumento("Documento A",
+                out _etiquetaA, out _btnCargarA, out _textoA);
+            tarjetaA.Location = new Point(margen, 90);
+            Controls.Add(tarjetaA);
 
-            // ── Document B card ─────────────────────────────────────────────
-            var cardB = MakeDocCard("Documento B", out _labelB, out _btnLoadB, out _textB);
-            cardB.Location = new Point(pad + cardA.Width + pad, 90);
-            Controls.Add(cardB);
+            // ── Tarjeta Documento B ─────────────────────────────────────────
+            var tarjetaB = CrearTarjetaDocumento("Documento B",
+                out _etiquetaB, out _btnCargarB, out _textoB);
+            tarjetaB.Location = new Point(margen + tarjetaA.Width + margen, 90);
+            Controls.Add(tarjetaB);
 
-            _btnLoadA.Tag = "A";
-            _btnLoadB.Tag = "B";
-            _btnLoadA.Click += OnLoadFile;
-            _btnLoadB.Click += OnLoadFile;
+            _btnCargarA.Tag    = "A";
+            _btnCargarB.Tag    = "B";
+            _btnCargarA.Click += AlCargarArchivo;
+            _btnCargarB.Click += AlCargarArchivo;
 
-            // ── Analyze button ──────────────────────────────────────────────
-            _btnAnalyze = StyledButton("🔍  Analizar Documentos", AppStyles.Accent);
-            _btnAnalyze.Width    = 260;
-            _btnAnalyze.Height   = 46;
-            _btnAnalyze.Location = new Point(pad, 90 + cardA.Height + 16);
-            _btnAnalyze.Click   += OnAnalyze;
-            Controls.Add(_btnAnalyze);
+            // ── Botón Analizar ──────────────────────────────────────────────
+            _btnAnalizar = BotonEstilizado("🔍  Analizar Documentos", EstilosApp.Acento);
+            _btnAnalizar.Width    = 260;
+            _btnAnalizar.Height   = 46;
+            _btnAnalizar.Location = new Point(margen, 90 + tarjetaA.Height + 16);
+            _btnAnalizar.Click   += AlAnalizar;
+            Controls.Add(_btnAnalizar);
 
-            // ── Results card (hidden until analysis) ────────────────────────
-            _resultCard = new Panel
+            // ── Tarjeta de resultados (oculta hasta analizar) ───────────────
+            _tarjetaResultado = new Panel
             {
-                Location  = new Point(pad, 90 + cardA.Height + 74),
-                Width     = cardA.Width * 2 + pad,
-                Height    = 520,
-                BackColor = AppStyles.BgPanel,
-                BorderStyle = BorderStyle.None,
-                Visible   = false
+                Location    = new Point(margen, 90 + tarjetaA.Height + 74),
+                Width       = tarjetaA.Width * 2 + margen,
+                Height      = 520,
+                BackColor   = EstilosApp.FondoPanel,
+                Visible     = false
             };
-            BuildResultCard(_resultCard);
-            Controls.Add(_resultCard);
+            ConstruirTarjetaResultado(_tarjetaResultado);
+            Controls.Add(_tarjetaResultado);
         }
 
-        private Panel MakeDocCard(string header,
-                                   out Label pathLabel,
-                                   out Button loadButton,
-                                   out TextBox previewBox)
+        // ─── Crea una tarjeta de carga de documento ────────────────────────────
+        private Panel CrearTarjetaDocumento(string encabezado,
+            out Label etiquetaRuta, out Button botonCargar, out TextBox cajaVista)
         {
-            var card = new Panel
+            var tarjeta = new Panel
             {
                 Width     = 420,
                 Height    = 310,
-                BackColor = AppStyles.BgCard,
+                BackColor = EstilosApp.FondoTarjeta,
                 Padding   = new Padding(14)
             };
 
-            var hdr = new Label
+            tarjeta.Controls.Add(new Label
             {
-                Text      = header,
-                Font      = AppStyles.FontHeading,
-                ForeColor = AppStyles.AccentLight,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(14, 14)
-            };
-            card.Controls.Add(hdr);
+                Text = encabezado, Font = EstilosApp.FuenteEncabezado,
+                ForeColor = EstilosApp.AcentoClaro, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(14, 14)
+            });
 
-            pathLabel = new Label
+            etiquetaRuta = new Label
             {
-                Text      = "Sin archivo cargado",
-                Font      = AppStyles.FontSmall,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = false,
-                Width     = 390,
-                Location  = new Point(14, 44)
+                Text = "Sin archivo cargado", Font = EstilosApp.FuentePequena,
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                AutoSize = false, Width = 390, Location = new Point(14, 44)
             };
-            card.Controls.Add(pathLabel);
+            tarjeta.Controls.Add(etiquetaRuta);
 
-            loadButton = StyledButton("📂  Cargar archivo…", AppStyles.BgPanel);
-            loadButton.Width    = 180;
-            loadButton.Height   = 34;
-            loadButton.Location = new Point(14, 68);
-            card.Controls.Add(loadButton);
+            botonCargar = BotonEstilizado("📂  Cargar archivo…", EstilosApp.FondoPanel);
+            botonCargar.Width    = 180;
+            botonCargar.Height   = 34;
+            botonCargar.Location = new Point(14, 68);
+            tarjeta.Controls.Add(botonCargar);
 
-            var orLbl = new Label
+            tarjeta.Controls.Add(new Label
             {
-                Text      = "— o pega texto —",
-                Font      = AppStyles.FontSmall,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(202, 76)
-            };
-            card.Controls.Add(orLbl);
+                Text = "— o pega texto —", Font = EstilosApp.FuentePequena,
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(202, 76)
+            });
 
-            previewBox = new TextBox
+            cajaVista = new TextBox
             {
                 Multiline   = true,
                 ScrollBars  = ScrollBars.Vertical,
-                Font        = AppStyles.FontMono,
-                BackColor   = AppStyles.BgDark,
-                ForeColor   = AppStyles.TextPrimary,
+                Font        = EstilosApp.FuenteMono,
+                BackColor   = EstilosApp.FondoOscuro,
+                ForeColor   = EstilosApp.TextoPrimario,
                 BorderStyle = BorderStyle.FixedSingle,
                 Location    = new Point(14, 108),
                 Width       = 390,
                 Height      = 188
             };
-            card.Controls.Add(previewBox);
+            tarjeta.Controls.Add(cajaVista);
 
-            return card;
+            return tarjeta;
         }
 
-        private void BuildResultCard(Panel card)
+        // ─── Construye la tarjeta de resultados ────────────────────────────────
+        private void ConstruirTarjetaResultado(Panel tarjeta)
         {
-            int pad = 16;
+            int m = 16;
 
-            // ── Score + verdict ─────────────────────────────────────────────
-            _scoreLbl = new Label
+            // ── Puntuación y veredicto ──────────────────────────────────────
+            _etiqPuntuacion = new Label
             {
-                Text      = "–– %",
-                Font      = new Font("Segoe UI", 36f, FontStyle.Bold),
-                ForeColor = AppStyles.Accent,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(pad, pad)
+                Text = "–– %", Font = new Font("Segoe UI", 36f, FontStyle.Bold),
+                ForeColor = EstilosApp.Acento, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(m, m)
             };
-            card.Controls.Add(_scoreLbl);
+            tarjeta.Controls.Add(_etiqPuntuacion);
 
-            _verdictLbl = new Label
+            _etiqVeredicto = new Label
             {
-                Text      = "",
-                Font      = AppStyles.FontHeading,
-                ForeColor = AppStyles.TextPrimary,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = new Point(pad + 140, pad + 10)
+                Text = "", Font = EstilosApp.FuenteEncabezado,
+                ForeColor = EstilosApp.TextoPrimario, BackColor = Color.Transparent,
+                AutoSize = true, Location = new Point(m + 140, m + 10)
             };
-            card.Controls.Add(_verdictLbl);
+            tarjeta.Controls.Add(_etiqVeredicto);
 
-            // ── Individual metrics ─────────────────────────────────────────
-            _cosLbl = MetricLabel("Coseno:",   new Point(pad, 90), card);
-            _jacLbl = MetricLabel("Jaccard:",  new Point(pad, 118), card);
-            _biLbl  = MetricLabel("Bigramas:", new Point(pad + 220, 90), card);
-            _triLbl = MetricLabel("Trigramas:", new Point(pad + 220, 118), card);
+            // ── Métricas individuales ───────────────────────────────────────
+            _etiqCoseno    = EtiquetaMetrica("Coseno:",     new Point(m,       90), tarjeta);
+            _etiqJaccard   = EtiquetaMetrica("Jaccard:",    new Point(m,      118), tarjeta);
+            _etiqBigramas  = EtiquetaMetrica("Bigramas:",   new Point(m + 220, 90), tarjeta);
+            _etiqTrigramas = EtiquetaMetrica("Trigramas:",  new Point(m + 220,118), tarjeta);
 
-            // ── Separator ───────────────────────────────────────────────────
-            card.Controls.Add(new Panel
+            tarjeta.Controls.Add(new Panel
             {
-                Height    = 1,
-                Width     = card.Width - pad * 2,
-                Location  = new Point(pad, 150),
-                BackColor = AppStyles.Border
+                Height = 1, Width = tarjeta.Width - m * 2,
+                Location = new Point(m, 150), BackColor = EstilosApp.Borde
             });
 
-            // ── Common words list ────────────────────────────────────────────
-            AddSubHeading(card, "Palabras en común", new Point(pad, 162));
-            _commonWordsBox = StyledListBox(new Point(pad, 186), 200, 140, card);
+            // ── Palabras comunes ────────────────────────────────────────────
+            AgregarSubtitulo(tarjeta, "Palabras en común", new Point(m, 162));
+            _listaPalabrasComunes = ListaEstilizada(new Point(m, 186), 200, 140, tarjeta);
 
-            // ── Common bigrams list ──────────────────────────────────────────
-            AddSubHeading(card, "Frases comunes (bigramas)", new Point(pad + 220, 162));
-            _commonBigramBox = StyledListBox(new Point(pad + 220, 186), 340, 140, card);
+            // ── Bigramas comunes ────────────────────────────────────────────
+            AgregarSubtitulo(tarjeta, "Frases comunes (bigramas)", new Point(m + 220, 162));
+            _listaBigramasComunes = ListaEstilizada(new Point(m + 220, 186), 340, 140, tarjeta);
 
-            // ── Token tables ─────────────────────────────────────────────────
-            card.Controls.Add(new Panel
+            tarjeta.Controls.Add(new Panel
             {
-                Height    = 1,
-                Width     = card.Width - pad * 2,
-                Location  = new Point(pad, 336),
-                BackColor = AppStyles.Border
+                Height = 1, Width = tarjeta.Width - m * 2,
+                Location = new Point(m, 336), BackColor = EstilosApp.Borde
             });
 
-            AddSubHeading(card, "Tokens – Documento A", new Point(pad, 348));
-            _tokenListA = StyledListBox(new Point(pad, 372), 200, 120, card);
+            // ── Tokens por documento ────────────────────────────────────────
+            AgregarSubtitulo(tarjeta, "Tokens – Documento A", new Point(m, 348));
+            _listaTokensA = ListaEstilizada(new Point(m, 372), 200, 120, tarjeta);
 
-            AddSubHeading(card, "Tokens – Documento B", new Point(pad + 220, 348));
-            _tokenListB = StyledListBox(new Point(pad + 220, 372), 200, 120, card);
+            AgregarSubtitulo(tarjeta, "Tokens – Documento B", new Point(m + 220, 348));
+            _listaTokensB = ListaEstilizada(new Point(m + 220, 372), 200, 120, tarjeta);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Event handlers
-        // ─────────────────────────────────────────────────────────────────────
+        // ─── Eventos ───────────────────────────────────────────────────────────
 
-        private void OnLoadFile(object? sender, EventArgs e)
+        private void AlCargarArchivo(object? remitente, EventArgs e)
         {
-            string tag = (sender as Button)?.Tag?.ToString() ?? "A";
+            string etiquetaSlot = (remitente as Button)?.Tag?.ToString() ?? "A";
 
-            using var dlg = new OpenFileDialog
+            using var dialogo = new OpenFileDialog
             {
                 Title  = "Seleccionar archivo de texto",
                 Filter = "Archivos de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*"
             };
-            if (dlg.ShowDialog() != DialogResult.OK) return;
+            if (dialogo.ShowDialog() != DialogResult.OK) return;
 
             try
             {
-                var doc = DocumentProcessor.Process(dlg.FileName);
-                if (tag == "A")
+                var doc = ProcesadorDocumentos.Procesar(dialogo.FileName);
+                string vistaPrevia = doc.TextoOriginal.Length > 3000
+                    ? doc.TextoOriginal.Substring(0, 3000) + "…"
+                    : doc.TextoOriginal;
+
+                if (etiquetaSlot == "A")
                 {
-                    _docA    = doc;
-                    _labelA.Text  = Path.GetFileName(dlg.FileName);
-                    _textA.Text   = doc.RawText.Length > 3000
-                                     ? doc.RawText.Substring(0, 3000) + "…"
-                                     : doc.RawText;
+                    _documentoA         = doc;
+                    _etiquetaA.Text     = Path.GetFileName(dialogo.FileName);
+                    _textoA.Text    = vistaPrevia;
                 }
                 else
                 {
-                    _docB    = doc;
-                    _labelB.Text  = Path.GetFileName(dlg.FileName);
-                    _textB.Text   = doc.RawText.Length > 3000
-                                     ? doc.RawText.Substring(0, 3000) + "…"
-                                     : doc.RawText;
+                    _documentoB         = doc;
+                    _etiquetaB.Text     = Path.GetFileName(dialogo.FileName);
+                    _textoB.Text    = vistaPrevia;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar archivo:\n{ex.Message}",
-                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void OnAnalyze(object? sender, EventArgs e)
+        private void AlAnalizar(object? remitente, EventArgs e)
         {
-            // Allow pasted text too
-            if (_docA == null && !string.IsNullOrWhiteSpace(_textA.Text))
-                _docA = DocumentProcessor.ProcessText(_textA.Text, "Documento A");
-
-            if (_docB == null && !string.IsNullOrWhiteSpace(_textB.Text))
-                _docB = DocumentProcessor.ProcessText(_textB.Text, "Documento B");
-
-            if (_docA == null || _docB == null)
+            // Verificar que ambas cajas tengan contenido
+            if (string.IsNullOrWhiteSpace(_textoA.Text) || string.IsNullOrWhiteSpace(_textoB.Text))
             {
                 MessageBox.Show("Por favor carga o pega ambos documentos antes de analizar.",
-                                "Faltan documentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    "Faltan documentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            SimilarityReport report = SimilarityEngine.Compare(_docA, _docB);
-            ShowResults(report);
+            // Siempre re-procesar desde el contenido actual de las cajas de texto.
+            // Esto permite modificar o cambiar el texto y analizar de nuevo sin problemas.
+            string nombreA = (_etiquetaA.Text == "Sin archivo cargado" || string.IsNullOrWhiteSpace(_etiquetaA.Text))
+                ? "Documento A" : _etiquetaA.Text;
+            string nombreB = (_etiquetaB.Text == "Sin archivo cargado" || string.IsNullOrWhiteSpace(_etiquetaB.Text))
+                ? "Documento B" : _etiquetaB.Text;
+
+            _documentoA = ProcesadorDocumentos.ProcesarTexto(_textoA.Text, nombreA);
+            _documentoB = ProcesadorDocumentos.ProcesarTexto(_textoB.Text, nombreB);
+
+            ReporteSimilitud reporte = MotorSimilitud.Comparar(_documentoA, _documentoB);
+            MostrarResultados(reporte);
         }
 
-        private void ShowResults(SimilarityReport r)
+        private void MostrarResultados(ReporteSimilitud reporte)
         {
-            Color scoreColor = AppStyles.ScoreColor(r.CombinedScore);
-            _scoreLbl.Text      = $"{r.CombinedScore:F1} %";
-            _scoreLbl.ForeColor = scoreColor;
-            _verdictLbl.Text    = r.Verdict;
-            _verdictLbl.ForeColor = scoreColor;
+            Color colorPuntuacion = EstilosApp.ColorPuntuacion(reporte.PuntuacionCombinada);
 
-            _cosLbl.Text = $"Coseno:    {r.CosineSimilarity * 100:F1} %";
-            _jacLbl.Text = $"Jaccard:   {r.JaccardSimilarity * 100:F1} %";
-            _biLbl.Text  = $"Bigramas:  {r.BigramSimilarity * 100:F1} %";
-            _triLbl.Text = $"Trigramas: {r.TrigramSimilarity * 100:F1} %";
+            _etiqPuntuacion.Text      = $"{reporte.PuntuacionCombinada:F1} %";
+            _etiqPuntuacion.ForeColor = colorPuntuacion;
+            _etiqVeredicto.Text       = reporte.Veredicto;
+            _etiqVeredicto.ForeColor  = colorPuntuacion;
 
-            _commonWordsBox.Items.Clear();
-            foreach (var w in r.CommonWords.Take(100))
-                _commonWordsBox.Items.Add(w);
+            _etiqCoseno.Text    = $"Coseno:     {reporte.SimilitudCoseno    * 100:F1} %";
+            _etiqJaccard.Text   = $"Jaccard:    {reporte.SimilitudJaccard   * 100:F1} %";
+            _etiqBigramas.Text  = $"Bigramas:   {reporte.SimilitudBigramas  * 100:F1} %";
+            _etiqTrigramas.Text = $"Trigramas:  {reporte.SimilitudTrigramas * 100:F1} %";
 
-            _commonBigramBox.Items.Clear();
-            foreach (var b in r.CommonBigrams.Take(50))
-                _commonBigramBox.Items.Add(b);
+            _listaPalabrasComunes.Items.Clear();
+            foreach (var p in reporte.PalabrasComunes.Take(100))
+                _listaPalabrasComunes.Items.Add(p);
 
-            _tokenListA.Items.Clear();
-            if (_docA != null)
-            {
-                var grouped = _docA.Tokens
-                    .Where(t => t.Type != TokenType.Whitespace)
-                    .GroupBy(t => t.Type)
-                    .OrderByDescending(g => g.Count());
-                foreach (var g in grouped)
-                    _tokenListA.Items.Add($"{g.Key}: {g.Count()} tokens");
-            }
+            _listaBigramasComunes.Items.Clear();
+            foreach (var b in reporte.BigramasComunes.Take(50))
+                _listaBigramasComunes.Items.Add(b);
 
-            _tokenListB.Items.Clear();
-            if (_docB != null)
-            {
-                var grouped = _docB.Tokens
-                    .Where(t => t.Type != TokenType.Whitespace)
-                    .GroupBy(t => t.Type)
-                    .OrderByDescending(g => g.Count());
-                foreach (var g in grouped)
-                    _tokenListB.Items.Add($"{g.Key}: {g.Count()} tokens");
-            }
+            // ── Estadísticas de tokens por documento ────────────────────────
+            RellenarListaTokens(_listaTokensA, _documentoA);
+            RellenarListaTokens(_listaTokensB, _documentoB);
 
-            _resultCard.Visible = true;
+            _tarjetaResultado.Visible = true;
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Small helpers
-        // ─────────────────────────────────────────────────────────────────────
+        private void RellenarListaTokens(ListBox lista, DocumentoProcesado? doc)
+        {
+            lista.Items.Clear();
+            if (doc == null) return;
 
-        private Button StyledButton(string text, Color bg)
+            var agrupados = doc.Tokens
+                .Where(t => t.Tipo != TipoToken.EspacioBlanco)
+                .GroupBy(t => t.Tipo)
+                .OrderByDescending(g => g.Count());
+
+            foreach (var grupo in agrupados)
+                lista.Items.Add($"{grupo.Key}: {grupo.Count()} tokens");
+        }
+
+        // ─── Métodos auxiliares de construcción ───────────────────────────────
+
+        private Button BotonEstilizado(string texto, Color fondo)
         {
             var btn = new Button
             {
-                Text      = text,
-                Font      = AppStyles.FontBody,
-                BackColor = bg,
-                ForeColor = AppStyles.TextPrimary,
+                Text      = texto,
+                Font      = EstilosApp.FuenteCuerpo,
+                BackColor = fondo,
+                ForeColor = EstilosApp.TextoPrimario,
                 FlatStyle = FlatStyle.Flat,
                 Cursor    = Cursors.Hand
             };
-            btn.FlatAppearance.BorderColor = AppStyles.Border;
-            btn.FlatAppearance.MouseOverBackColor = AppStyles.AccentHover;
+            btn.FlatAppearance.BorderColor         = EstilosApp.Borde;
+            btn.FlatAppearance.MouseOverBackColor  = EstilosApp.AcentoHover;
             return btn;
         }
 
-        private Label MetricLabel(string prefix, Point loc, Panel parent)
+        private Label EtiquetaMetrica(string prefijo, Point ubicacion, Panel padre)
         {
-            var lbl = new Label
+            var etiqueta = new Label
             {
-                Text      = prefix,
-                Font      = AppStyles.FontBody,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = loc
+                Text = prefijo, Font = EstilosApp.FuenteCuerpo,
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                AutoSize = true, Location = ubicacion
             };
-            parent.Controls.Add(lbl);
-            return lbl;
+            padre.Controls.Add(etiqueta);
+            return etiqueta;
         }
 
-        private void AddSubHeading(Panel parent, string text, Point loc)
+        private void AgregarSubtitulo(Panel padre, string texto, Point ubicacion)
         {
-            parent.Controls.Add(new Label
+            padre.Controls.Add(new Label
             {
-                Text      = text,
-                Font      = AppStyles.FontBody,
-                ForeColor = AppStyles.AccentLight,
-                BackColor = Color.Transparent,
-                AutoSize  = true,
-                Location  = loc
+                Text = texto, Font = EstilosApp.FuenteCuerpo,
+                ForeColor = EstilosApp.AcentoClaro, BackColor = Color.Transparent,
+                AutoSize = true, Location = ubicacion
             });
         }
 
-        private ListBox StyledListBox(Point loc, int w, int h, Panel parent)
+        private ListBox ListaEstilizada(Point ubicacion, int ancho, int alto, Panel padre)
         {
-            var lb = new ListBox
+            var lista = new ListBox
             {
-                Location  = loc,
-                Width     = w,
-                Height    = h,
-                BackColor = AppStyles.BgDark,
-                ForeColor = AppStyles.TextPrimary,
-                Font      = AppStyles.FontMono,
-                BorderStyle = BorderStyle.FixedSingle,
+                Location            = ubicacion,
+                Width               = ancho,
+                Height              = alto,
+                BackColor           = EstilosApp.FondoOscuro,
+                ForeColor           = EstilosApp.TextoPrimario,
+                Font                = EstilosApp.FuenteMono,
+                BorderStyle         = BorderStyle.FixedSingle,
                 ScrollAlwaysVisible = false
             };
-            parent.Controls.Add(lb);
-            return lb;
+            padre.Controls.Add(lista);
+            return lista;
         }
     }
 }

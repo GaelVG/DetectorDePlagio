@@ -1,130 +1,128 @@
-using System;
 using System.Collections.Generic;
 
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Lexical Analyzer (Análisis Léxico).
-    /// Reads a text character by character and groups characters into Token objects.
-    /// Uses the Alphabet Σ to validate each character.
+    /// Analizador Léxico.
+    /// Lee el texto de entrada carácter por carácter y agrupa los caracteres
+    /// en objetos Token, usando el Alfabeto Σ para validar cada símbolo.
     /// </summary>
-    public class Lexer
+    public class AnalizadorLexico
     {
-        private readonly string _input;
-        private int _pos;
+        private readonly string _entrada; // texto fuente a analizar
+        private int _pos;                 // posición actual en la cadena
 
-        public Lexer(string input)
+        /// <param name="entrada">Texto a analizar léxicamente.</param>
+        public AnalizadorLexico(string entrada)
         {
-            _input = input ?? string.Empty;
-            _pos = 0;
+            _entrada = entrada ?? string.Empty;
+            _pos     = 0;
         }
 
-        /// <summary>
-        /// Tokenizes the entire input string and returns the token stream.
-        /// </summary>
-        public List<Token> Tokenize()
+        /// <summary>Tokeniza la entrada completa y devuelve el flujo de tokens.</summary>
+        public List<Token> Tokenizar()
         {
             var tokens = new List<Token>();
             _pos = 0;
 
-            while (_pos < _input.Length)
+            while (_pos < _entrada.Length)
             {
-                char current = _input[_pos];
+                char actual = _entrada[_pos];
 
-                // ── String literals: "..." ───────────────────────────────────
-                if (current == '"')
+                // ── Cadenas de texto: "..." ───────────────────────────────────
+                if (actual == '"')
                 {
-                    tokens.Add(ReadStringLiteral());
+                    tokens.Add(LeerCadenaTexto());
                     continue;
                 }
 
-                // ── Boolean symbols: #t / #f ─────────────────────────────────
-                if (current == '#' && _pos + 1 < _input.Length &&
-                    (_input[_pos + 1] == 't' || _input[_pos + 1] == 'f'))
+                // ── Símbolos booleanos: #t / #f ───────────────────────────────
+                if (actual == '#' && _pos + 1 < _entrada.Length &&
+                    (_entrada[_pos + 1] == 't' || _entrada[_pos + 1] == 'f'))
                 {
-                    tokens.Add(new Token(TokenType.Boolean, _input.Substring(_pos, 2), _pos));
+                    tokens.Add(new Token(TipoToken.Booleano, _entrada.Substring(_pos, 2), _pos));
                     _pos += 2;
                     continue;
                 }
 
-                // ── Letters → WORD token ─────────────────────────────────────
-                if (Alphabet.LowercaseLetters.Contains(current) ||
-                    Alphabet.UppercaseLetters.Contains(current) ||
-                    current == '_')
+                // ── Letras → PALABRA ──────────────────────────────────────────
+                if (Alfabeto.LetrasMinusculas.Contains(actual) ||
+                    Alfabeto.LetrasMayusculas.Contains(actual) ||
+                    actual == '_')
                 {
-                    tokens.Add(ReadWord());
+                    tokens.Add(LeerPalabra());
                     continue;
                 }
 
-                // ── Digits → NUMBER token ────────────────────────────────────
-                if (Alphabet.Digits.Contains(current))
+                // ── Dígitos → NUMERO ──────────────────────────────────────────
+                if (Alfabeto.Digitos.Contains(actual))
                 {
-                    tokens.Add(ReadNumber());
+                    tokens.Add(LeerNumero());
                     continue;
                 }
 
-                // ── Whitespace ───────────────────────────────────────────────
-                if (Alphabet.Whitespace.Contains(current))
+                // ── Espacios en blanco ────────────────────────────────────────
+                if (Alfabeto.EspaciosBlanco.Contains(actual))
                 {
-                    tokens.Add(ReadWhitespace());
+                    tokens.Add(LeerEspacioBlanco());
                     continue;
                 }
 
-                // ── Special chars in Σ ───────────────────────────────────────
-                if (Alphabet.SpecialChars.Contains(current))
+                // ── Caracteres especiales del Σ ───────────────────────────────
+                if (Alfabeto.CaracteresEspeciales.Contains(actual))
                 {
-                    tokens.Add(new Token(TokenType.SpecialChar, current.ToString(), _pos));
+                    tokens.Add(new Token(TipoToken.CaracterEspecial, actual.ToString(), _pos));
                     _pos++;
                     continue;
                 }
 
-                // ── Unknown (not in Σ): record and skip ──────────────────────
-                tokens.Add(new Token(TokenType.Unknown, current.ToString(), _pos));
+                // ── Desconocido (no pertenece a Σ) ───────────────────────────
+                tokens.Add(new Token(TipoToken.Desconocido, actual.ToString(), _pos));
                 _pos++;
             }
 
             return tokens;
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────────
+        // ─── Métodos auxiliares de lectura ─────────────────────────────────────
 
-        private Token ReadWord()
+        private Token LeerPalabra()
         {
-            int start = _pos;
-            while (_pos < _input.Length &&
-                   (Alphabet.LowercaseLetters.Contains(_input[_pos]) ||
-                    Alphabet.UppercaseLetters.Contains(_input[_pos]) ||
-                    _input[_pos] == '_'))
+            int inicio = _pos;
+            while (_pos < _entrada.Length &&
+                   (Alfabeto.LetrasMinusculas.Contains(_entrada[_pos]) ||
+                    Alfabeto.LetrasMayusculas.Contains(_entrada[_pos]) ||
+                    _entrada[_pos] == '_'))
             {
                 _pos++;
             }
-            return new Token(TokenType.Word, _input.Substring(start, _pos - start), start);
+            return new Token(TipoToken.Palabra, _entrada.Substring(inicio, _pos - inicio), inicio);
         }
 
-        private Token ReadNumber()
+        private Token LeerNumero()
         {
-            int start = _pos;
-            while (_pos < _input.Length && Alphabet.Digits.Contains(_input[_pos]))
+            int inicio = _pos;
+            while (_pos < _entrada.Length && Alfabeto.Digitos.Contains(_entrada[_pos]))
                 _pos++;
-            return new Token(TokenType.Number, _input.Substring(start, _pos - start), start);
+            return new Token(TipoToken.Numero, _entrada.Substring(inicio, _pos - inicio), inicio);
         }
 
-        private Token ReadWhitespace()
+        private Token LeerEspacioBlanco()
         {
-            int start = _pos;
-            while (_pos < _input.Length && Alphabet.Whitespace.Contains(_input[_pos]))
+            int inicio = _pos;
+            while (_pos < _entrada.Length && Alfabeto.EspaciosBlanco.Contains(_entrada[_pos]))
                 _pos++;
-            return new Token(TokenType.Whitespace, _input.Substring(start, _pos - start), start);
+            return new Token(TipoToken.EspacioBlanco, _entrada.Substring(inicio, _pos - inicio), inicio);
         }
 
-        private Token ReadStringLiteral()
+        private Token LeerCadenaTexto()
         {
-            int start = _pos;
-            _pos++; // skip opening "
-            while (_pos < _input.Length && _input[_pos] != '"')
+            int inicio = _pos;
+            _pos++; // saltar comilla de apertura "
+            while (_pos < _entrada.Length && _entrada[_pos] != '"')
                 _pos++;
-            if (_pos < _input.Length) _pos++; // skip closing "
-            return new Token(TokenType.StringLiteral, _input.Substring(start, _pos - start), start);
+            if (_pos < _entrada.Length) _pos++; // saltar comilla de cierre "
+            return new Token(TipoToken.CadenaTexto, _entrada.Substring(inicio, _pos - inicio), inicio);
         }
     }
 }

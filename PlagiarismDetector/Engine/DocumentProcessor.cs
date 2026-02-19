@@ -5,44 +5,53 @@ using System.Linq;
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Reads a text file, preprocesses it, and runs the Lexer to produce a ProcessedDocument.
+    /// Procesador de Documentos.
+    /// Lee archivos de texto, los preprocesa y ejecuta el Analizador Léxico
+    /// para producir un DocumentoProcesado listo para la comparación.
     /// </summary>
-    public class DocumentProcessor
+    public class ProcesadorDocumentos
     {
         /// <summary>
-        /// Reads a .txt file and performs lexical analysis.
+        /// Lee un archivo .txt del disco y realiza el análisis léxico completo.
         /// </summary>
-        public static ProcessedDocument Process(string filePath)
+        /// <param name="rutaArchivo">Ruta absoluta al archivo de texto.</param>
+        public static DocumentoProcesado Procesar(string rutaArchivo)
         {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"Archivo no encontrado: {filePath}");
+            if (!File.Exists(rutaArchivo))
+                throw new FileNotFoundException($"Archivo no encontrado: {rutaArchivo}");
 
-            string rawText = File.ReadAllText(filePath);
-            return ProcessText(rawText, Path.GetFileName(filePath), filePath);
+            string textoOriginal = File.ReadAllText(rutaArchivo);
+            return ProcesarTexto(textoOriginal, Path.GetFileName(rutaArchivo), rutaArchivo);
         }
 
         /// <summary>
-        /// Processes a raw text string directly (used by the UI when pasting text).
+        /// Procesa una cadena de texto directamente (para texto pegado en la interfaz).
         /// </summary>
-        public static ProcessedDocument ProcessText(string rawText, string name = "Documento", string filePath = "")
+        /// <param name="texto">Contenido textual a analizar.</param>
+        /// <param name="nombre">Nombre descriptivo del documento.</param>
+        /// <param name="rutaArchivo">Ruta del archivo (vacía si es texto directo).</param>
+        public static DocumentoProcesado ProcesarTexto(
+            string texto,
+            string nombre      = "Documento",
+            string rutaArchivo = "")
         {
-            // ── Lexical analysis ────────────────────────────────────────────
-            var lexer  = new Lexer(rawText);
-            var tokens = lexer.Tokenize();
+            // ── Análisis léxico ─────────────────────────────────────────────
+            var analizador = new AnalizadorLexico(texto);
+            var tokens     = analizador.Tokenizar();
 
-            // ── Extract normalized words for similarity comparison ────────
-            var words = tokens
-                .Where(t => t.Type == TokenType.Word)
-                .Select(t => t.Value.ToLowerInvariant())
+            // ── Extraer palabras normalizadas para el Motor de Similitud ────
+            var palabras = tokens
+                .Where(t => t.Tipo == TipoToken.Palabra)
+                .Select(t => t.Valor.ToLowerInvariant())
                 .ToList();
 
-            return new ProcessedDocument
+            return new DocumentoProcesado
             {
-                Name     = name,
-                FilePath = filePath,
-                RawText  = rawText,
-                Tokens   = tokens,
-                Words    = words
+                Nombre        = nombre,
+                RutaArchivo   = rutaArchivo,
+                TextoOriginal = texto,
+                Tokens        = tokens,
+                Palabras      = palabras
             };
         }
     }

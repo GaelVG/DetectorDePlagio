@@ -4,21 +4,29 @@ using System.Linq;
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Represents a fully processed document:
-    /// raw text + token stream + computed statistics.
+    /// Representa un documento completamente procesado:
+    /// texto original + flujo de tokens + estadísticas calculadas.
     /// </summary>
-    public class ProcessedDocument
+    public class DocumentoProcesado
     {
-        public string        Name       { get; set; } = string.Empty;
-        public string        FilePath   { get; set; } = string.Empty;
-        public string        RawText    { get; set; } = string.Empty;
-        public List<Token>   Tokens     { get; set; } = new();
+        /// <summary>Nombre descriptivo del documento.</summary>
+        public string Nombre { get; set; } = string.Empty;
 
-        // Normalized (lowercased) words only – used by similarity engine
-        public List<string>  Words      { get; set; } = new();
+        /// <summary>Ruta del archivo en disco (vacía si se ingresó texto directo).</summary>
+        public string RutaArchivo { get; set; } = string.Empty;
 
-        public int TotalTokens   => Tokens.Count;
-        public int WordCount     => Words.Count;
-        public int DistinctWords => Words.Distinct().Count();
+        /// <summary>Texto original sin modificar.</summary>
+        public string TextoOriginal { get; set; } = string.Empty;
+
+        /// <summary>Flujo de tokens producido por el Analizador Léxico.</summary>
+        public List<Token> Tokens { get; set; } = new();
+
+        /// <summary>Palabras normalizadas en minúsculas — usadas por el Motor de Similitud.</summary>
+        public List<string> Palabras { get; set; } = new();
+
+        // ─── Estadísticas ──────────────────────────────────────────────────────
+        public int TotalTokens      => Tokens.Count;
+        public int CantidadPalabras => Palabras.Count;
+        public int PalabrasDistintas => Palabras.Distinct().Count();
     }
 }

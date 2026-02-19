@@ -8,180 +8,176 @@ using PlagiarismDetector.Resources;
 
 namespace PlagiarismDetector.Forms
 {
-    public class AlphabetPanel : Panel
+    /// <summary>
+    /// Panel educativo del Alfabeto Σ.
+    /// Muestra los grupos de símbolos, propiedades del alfabeto y un
+    /// verificador interactivo de pertenencia (s ∈ Σ ?).
+    /// </summary>
+    public class PanelAlfabeto : Panel
     {
-        private TextBox _inputBox = null!;
-        private Label   _resultLabel = null!;
-        private Label   _groupLabel  = null!;
+        // ─── Controles interactivos ────────────────────────────────────────────
+        private TextBox _cajaEntrada    = null!;
+        private Label   _etiquetaResult = null!;
+        private Label   _etiquetaGrupo  = null!;
 
-        public AlphabetPanel()
+        public PanelAlfabeto()
         {
-            BackColor  = AppStyles.BgDark;
+            BackColor  = EstilosApp.FondoOscuro;
             Dock       = DockStyle.Fill;
-            BuildUI();
+            ConstruirUI();
         }
 
-        private void BuildUI()
+        private void ConstruirUI()
         {
-            var scroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = AppStyles.BgDark };
-            var inner  = new Panel { Width = 800, Location = new Point(40, 30), BackColor = AppStyles.BgDark };
+            var scroll    = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = EstilosApp.FondoOscuro };
+            var contenedor = new Panel { Width = 800, Location = new Point(40, 30), BackColor = EstilosApp.FondoOscuro };
 
             int y = 0;
 
-            // ── Title ──────────────────────────────────────────────────────
-            AddLabel(inner, "Alfabeto Σ (Sigma) – Teoría Formal", AppStyles.FontTitle, AppStyles.Accent, ref y, 0);
-            AddLabel(inner, "Conjunto finito de símbolos que el sistema reconoce y procesa", AppStyles.FontBody, AppStyles.TextSecond, ref y, 4);
+            // ── Título ──────────────────────────────────────────────────────
+            AgregarEtiqueta(contenedor, "Alfabeto Σ (Sigma) – Teoría Formal", EstilosApp.FuenteTitulo, EstilosApp.Acento, ref y, 0);
+            AgregarEtiqueta(contenedor, "Conjunto finito de símbolos que el sistema reconoce y procesa", EstilosApp.FuenteCuerpo, EstilosApp.TextoSecundario, ref y, 4);
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Cardinality card ───────────────────────────────────────────
-            AddLabel(inner, $"Cardinalidad de Σ:  |Σ| = {Alphabet.SigmaCardinality} símbolos", AppStyles.FontHeading, AppStyles.AccentLight, ref y, 10);
+            // ── Cardinalidad ─────────────────────────────────────────────────
+            AgregarEtiqueta(contenedor, $"Cardinalidad de Σ:  |Σ| = {Alfabeto.CardinalidadSigma} símbolos", EstilosApp.FuenteEncabezado, EstilosApp.AcentoClaro, ref y, 10);
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Symbol groups ──────────────────────────────────────────────
-            AddSymbolGroup(inner, "Letras minúsculas  (a-z)", Alphabet.LowercaseLetters, ref y);
-            AddSymbolGroup(inner, "Letras mayúsculas  (A-Z)", Alphabet.UppercaseLetters, ref y);
-            AddSymbolGroup(inner, "Dígitos  (0-9)",           Alphabet.Digits,           ref y);
-            AddSymbolGroup(inner, "Caracteres especiales",    Alphabet.SpecialChars,     ref y);
-            AddLabel(inner, "Espacio → ' '", AppStyles.FontMono, AppStyles.TextSecond, ref y, 8);
+            // ── Grupos de símbolos ───────────────────────────────────────────
+            AgregarGrupoSimbolo(contenedor, "Letras minúsculas  (a-z)", Alfabeto.LetrasMinusculas, ref y);
+            AgregarGrupoSimbolo(contenedor, "Letras mayúsculas  (A-Z)", Alfabeto.LetrasMayusculas, ref y);
+            AgregarGrupoSimbolo(contenedor, "Dígitos  (0-9)",           Alfabeto.Digitos,           ref y);
+            AgregarGrupoSimbolo(contenedor, "Caracteres especiales",    Alfabeto.CaracteresEspeciales, ref y);
+            AgregarEtiqueta(contenedor, "Espacio → ' '", EstilosApp.FuenteMono, EstilosApp.TextoSecundario, ref y, 8);
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Properties ────────────────────────────────────────────────
-            AddLabel(inner, "Propiedades del Alfabeto", AppStyles.FontHeading, AppStyles.TextPrimary, ref y, 10);
-            string[] props = {
+            // ── Propiedades del alfabeto ─────────────────────────────────────
+            AgregarEtiqueta(contenedor, "Propiedades del Alfabeto", EstilosApp.FuenteEncabezado, EstilosApp.TextoPrimario, ref y, 10);
+            string[] propiedades = {
                 "1. Puede ser vacío.",
                 "2. Debe estar definido explícitamente.",
                 "3. Debe ser finito.",
                 "4. Todos sus elementos deben ser símbolos."
             };
-            foreach (var p in props)
-                AddLabel(inner, p, AppStyles.FontBody, AppStyles.TextSecond, ref y, 0);
+            foreach (var p in propiedades)
+                AgregarEtiqueta(contenedor, p, EstilosApp.FuenteCuerpo, EstilosApp.TextoSecundario, ref y, 0);
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Interactive membership tester ──────────────────────────────
-            AddLabel(inner, "Prueba de pertenencia  s ∈ Σ ?", AppStyles.FontHeading, AppStyles.TextPrimary, ref y, 10);
-            AddLabel(inner, "Escribe un carácter para comprobar si pertenece al alfabeto:", AppStyles.FontBody, AppStyles.TextSecond, ref y, 4);
+            // ── Verificador de pertenencia interactivo ───────────────────────
+            AgregarEtiqueta(contenedor, "Prueba de pertenencia  s ∈ Σ ?", EstilosApp.FuenteEncabezado, EstilosApp.TextoPrimario, ref y, 10);
+            AgregarEtiqueta(contenedor, "Escribe un carácter para comprobar si pertenece al alfabeto:", EstilosApp.FuenteCuerpo, EstilosApp.TextoSecundario, ref y, 4);
 
-            _inputBox = new TextBox
+            _cajaEntrada = new TextBox
             {
-                MaxLength = 1,
-                Font      = new Font("Consolas", 14f),
-                BackColor = AppStyles.BgCard,
-                ForeColor = AppStyles.TextPrimary,
-                Width     = 60,
-                Height    = 36,
-                Location  = new Point(0, y),
+                MaxLength   = 1,
+                Font        = new Font("Consolas", 14f),
+                BackColor   = EstilosApp.FondoTarjeta,
+                ForeColor   = EstilosApp.TextoPrimario,
+                Width       = 60,
+                Location    = new Point(0, y),
                 BorderStyle = BorderStyle.FixedSingle,
                 TextAlign   = HorizontalAlignment.Center
             };
-            _inputBox.TextChanged += OnInputChanged;
-            inner.Controls.Add(_inputBox);
+            _cajaEntrada.TextChanged += AlCambiarEntrada;
+            contenedor.Controls.Add(_cajaEntrada);
             y += 44;
 
-            _resultLabel = new Label
+            _etiquetaResult = new Label
             {
-                Text      = "",
-                Font      = AppStyles.FontHeading,
-                ForeColor = AppStyles.TextPrimary,
-                BackColor = Color.Transparent,
-                Location  = new Point(0, y),
-                AutoSize  = true
+                Text = "", Font = EstilosApp.FuenteEncabezado,
+                ForeColor = EstilosApp.TextoPrimario, BackColor = Color.Transparent,
+                Location = new Point(0, y), AutoSize = true
             };
-            inner.Controls.Add(_resultLabel);
+            contenedor.Controls.Add(_etiquetaResult);
             y += 30;
 
-            _groupLabel = new Label
+            _etiquetaGrupo = new Label
             {
-                Text      = "",
-                Font      = AppStyles.FontBody,
-                ForeColor = AppStyles.TextSecond,
-                BackColor = Color.Transparent,
-                Location  = new Point(0, y),
-                AutoSize  = true
+                Text = "", Font = EstilosApp.FuenteCuerpo,
+                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
+                Location = new Point(0, y), AutoSize = true
             };
-            inner.Controls.Add(_groupLabel);
+            contenedor.Controls.Add(_etiquetaGrupo);
             y += 30;
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Sub-alphabet example ────────────────────────────────────────
-            AddLabel(inner, "Sub-Alfabeto  S1 ⊆ S2", AppStyles.FontHeading, AppStyles.TextPrimary, ref y, 10);
-            AddLabel(inner, "S1 = {a, b, c}  ⊆  S2 = Σ  →  verdadero", AppStyles.FontMono, AppStyles.AccentLight, ref y, 4);
-            AddLabel(inner, "S1 = {a, b, c}  ⊆  S2 = {a, b}  →  falso", AppStyles.FontMono, AppStyles.AccentLight, ref y, 0);
+            // ── Sub-Alfabeto ─────────────────────────────────────────────────
+            AgregarEtiqueta(contenedor, "Sub-Alfabeto  S1 ⊆ S2", EstilosApp.FuenteEncabezado, EstilosApp.TextoPrimario, ref y, 10);
+            AgregarEtiqueta(contenedor, "S1 = {a, b, c}  ⊆  S2 = Σ  →  verdadero", EstilosApp.FuenteMono, EstilosApp.AcentoClaro, ref y, 4);
+            AgregarEtiqueta(contenedor, "S1 = {a, b, c}  ⊆  S2 = {a, b}  →  falso", EstilosApp.FuenteMono, EstilosApp.AcentoClaro, ref y, 0);
 
-            AddSep(inner, ref y, 20);
+            AgregarSeparador(contenedor, ref y, 20);
 
-            // ── Epsilon ────────────────────────────────────────────────────
-            AddLabel(inner, "Símbolo Nulo  ε (Epsilon)", AppStyles.FontHeading, AppStyles.TextPrimary, ref y, 10);
-            AddLabel(inner, "Representa la ausencia de símbolo. Es el caso base en procesos recursivos\ndel compilador y la construcción de palabras vacías.",
-                AppStyles.FontBody, AppStyles.TextSecond, ref y, 4);
+            // ── Símbolo Nulo ─────────────────────────────────────────────────
+            AgregarEtiqueta(contenedor, "Símbolo Nulo  ε (Épsilon)", EstilosApp.FuenteEncabezado, EstilosApp.TextoPrimario, ref y, 10);
+            AgregarEtiqueta(contenedor,
+                "Representa la ausencia de símbolo. Es el caso base en procesos\n" +
+                "recursivos del compilador y la construcción de palabras vacías.",
+                EstilosApp.FuenteCuerpo, EstilosApp.TextoSecundario, ref y, 4);
 
-            inner.Height = y + 40;
-            scroll.Controls.Add(inner);
+            contenedor.Height = y + 40;
+            scroll.Controls.Add(contenedor);
             Controls.Add(scroll);
         }
 
-        private void OnInputChanged(object? sender, EventArgs e)
+        // ─── Evento: verificar pertenencia ────────────────────────────────────
+        private void AlCambiarEntrada(object? remitente, EventArgs e)
         {
-            string text = _inputBox.Text;
-            if (text.Length == 0)
+            string texto = _cajaEntrada.Text;
+            if (texto.Length == 0)
             {
-                _resultLabel.Text = "";
-                _groupLabel.Text  = "";
+                _etiquetaResult.Text = "";
+                _etiquetaGrupo.Text  = "";
                 return;
             }
 
-            char c = text[0];
-            bool belongs = Alphabet.BelongsToSigma(c);
-            string group = Alphabet.GetSymbolGroup(c);
+            char c         = texto[0];
+            bool pertenece = Alfabeto.PerteneceSigma(c);
+            string grupo   = Alfabeto.ObtenerGrupoSimbolo(c);
 
-            _resultLabel.ForeColor = belongs ? AppStyles.Success : AppStyles.Danger;
-            _resultLabel.Text = belongs
+            _etiquetaResult.ForeColor = pertenece ? EstilosApp.Exito : EstilosApp.Peligro;
+            _etiquetaResult.Text = pertenece
                 ? $"'{c}'  ∈  Σ  →  verdadero ✓"
                 : $"'{c}'  ∉  Σ  →  falso ✗";
 
-            _groupLabel.Text = group;
+            _etiquetaGrupo.Text = grupo;
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+        // ─── Métodos auxiliares de construcción ───────────────────────────────
 
-        private void AddLabel(Panel parent, string text, Font font, Color color, ref int y, int topPad)
+        private void AgregarEtiqueta(Panel padre, string texto, Font fuente, Color color, ref int y, int relleno)
         {
-            y += topPad;
-            var lbl = new Label
+            y += relleno;
+            var etiqueta = new Label
             {
-                Text      = text,
-                Font      = font,
-                ForeColor = color,
-                BackColor = Color.Transparent,
-                Location  = new Point(0, y),
-                AutoSize  = true
+                Text = texto, Font = fuente, ForeColor = color,
+                BackColor = Color.Transparent, Location = new Point(0, y), AutoSize = true
             };
-            parent.Controls.Add(lbl);
-            y += lbl.PreferredHeight + 6;
+            padre.Controls.Add(etiqueta);
+            y += etiqueta.PreferredHeight + 6;
         }
 
-        private void AddSymbolGroup(Panel parent, string title, HashSet<char> chars, ref int y)
+        private void AgregarGrupoSimbolo(Panel padre, string titulo, HashSet<char> simbolos, ref int y)
         {
-            AddLabel(parent, title, AppStyles.FontBody, AppStyles.TextPrimary, ref y, 10);
-            string symbols = string.Join("  ", chars.OrderBy(c => c));
-            AddLabel(parent, symbols, AppStyles.FontMono, AppStyles.TextSecond, ref y, 2);
+            AgregarEtiqueta(padre, titulo, EstilosApp.FuenteCuerpo, EstilosApp.TextoPrimario, ref y, 10);
+            string lista = string.Join("  ", simbolos.OrderBy(c => c));
+            AgregarEtiqueta(padre, lista, EstilosApp.FuenteMono, EstilosApp.TextoSecundario, ref y, 2);
         }
 
-        private void AddSep(Panel parent, ref int y, int pad)
+        private void AgregarSeparador(Panel padre, ref int y, int relleno)
         {
-            y += pad;
-            parent.Controls.Add(new Panel
+            y += relleno;
+            padre.Controls.Add(new Panel
             {
-                Height    = 1,
-                Width     = 750,
-                Location  = new Point(0, y),
-                BackColor = AppStyles.Border
+                Height = 1, Width = 750, Location = new Point(0, y),
+                BackColor = EstilosApp.Borde
             });
-            y += 1 + pad;
+            y += 1 + relleno;
         }
     }
 }

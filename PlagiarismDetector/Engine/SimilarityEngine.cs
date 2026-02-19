@@ -5,171 +5,154 @@ using System.Linq;
 namespace PlagiarismDetector.Engine
 {
     /// <summary>
-    /// Result of comparing two documents.
+    /// Resultado de la comparación entre dos documentos.
+    /// Incluye métricas individuales y puntuación combinada de plagio.
     /// </summary>
-    public class SimilarityReport
+    public class ReporteSimilitud
     {
-        public string DocumentAName  { get; set; } = "";
-        public string DocumentBName  { get; set; } = "";
+        // ─── Identificación ──────────────────────────────────────────────────
+        public string NombreDocumentoA { get; set; } = "";
+        public string NombreDocumentoB { get; set; } = "";
 
-        // Three independent metrics (0.0 – 1.0)
-        public double CosineSimilarity   { get; set; }
-        public double JaccardSimilarity  { get; set; }
-        public double BigramSimilarity   { get; set; }
-        public double TrigramSimilarity  { get; set; }
+        // ─── Métricas individuales (0.0 – 1.0) ──────────────────────────────
+        public double SimilitudCoseno    { get; set; }
+        public double SimilitudJaccard   { get; set; }
+        public double SimilitudBigramas  { get; set; }
+        public double SimilitudTrigramas { get; set; }
 
-        /// <summary>Combined plagiarism score (0–100 %).</summary>
-        public double CombinedScore =>
-            Math.Round((CosineSimilarity * 0.40 +
-                        JaccardSimilarity * 0.30 +
-                        BigramSimilarity  * 0.20 +
-                        TrigramSimilarity * 0.10) * 100, 2);
+        /// <summary>Puntuación combinada de plagio (0 – 100 %).</summary>
+        public double PuntuacionCombinada =>
+            Math.Round((SimilitudCoseno    * 0.40 +
+                        SimilitudJaccard   * 0.30 +
+                        SimilitudBigramas  * 0.20 +
+                        SimilitudTrigramas * 0.10) * 100, 2);
 
-        /// <summary>Shared word types between the two documents.</summary>
-        public List<string> CommonWords  { get; set; } = new();
+        /// <summary>Palabras compartidas entre los dos documentos.</summary>
+        public List<string> PalabrasComunes { get; set; } = new();
 
-        /// <summary>Shared 2-grams (adjacent word pairs).</summary>
-        public List<string> CommonBigrams { get; set; } = new();
+        /// <summary>Bigramas (pares de palabras) compartidos.</summary>
+        public List<string> BigramasComunes { get; set; } = new();
 
-        /// <summary>Human-readable verdict.</summary>
-        public string Verdict
+        /// <summary>Veredicto legible según la puntuación combinada.</summary>
+        public string Veredicto => PuntuacionCombinada switch
         {
-            get
-            {
-                return CombinedScore switch
-                {
-                    >= 80 => "⚠️ Alto riesgo de plagio",
-                    >= 50 => "⚡ Posible plagio detectado",
-                    >= 25 => "🔍 Similitud moderada",
-                    _     => "✅ Sin indicios significativos de plagio"
-                };
-            }
-        }
+            >= 80 => "⚠️ Alto riesgo de plagio",
+            >= 50 => "⚡ Posible plagio detectado",
+            >= 25 => "🔍 Similitud moderada",
+            _     => "✅ Sin indicios significativos de plagio"
+        };
     }
 
     /// <summary>
-    /// Similarity engine using three complementary algorithms.
-    /// All algorithms operate on the normalized word lists produced by the Lexer.
+    /// Motor de Similitud.
+    /// Compara dos documentos usando tres algoritmos complementarios aplicados
+    /// sobre las listas de palabras producidas por el Analizador Léxico.
     /// </summary>
-    public class SimilarityEngine
+    public class MotorSimilitud
     {
-        // ────────────────────────────────────────────────────────────────────
-        // Public API
-        // ────────────────────────────────────────────────────────────────────
+        // ─── API pública ─────────────────────────────────────────────────────
 
-        public static SimilarityReport Compare(ProcessedDocument a, ProcessedDocument b)
+        /// <summary>Compara dos documentos y devuelve un ReporteSimilitud.</summary>
+        public static ReporteSimilitud Comparar(DocumentoProcesado a, DocumentoProcesado b)
         {
-            var wordsA = a.Words;
-            var wordsB = b.Words;
+            var palabrasA = a.Palabras;
+            var palabrasB = b.Palabras;
 
-            var report = new SimilarityReport
+            return new ReporteSimilitud
             {
-                DocumentAName   = a.Name,
-                DocumentBName   = b.Name,
-                CosineSimilarity  = Cosine(wordsA, wordsB),
-                JaccardSimilarity = Jaccard(wordsA, wordsB),
-                BigramSimilarity  = NgramSimilarity(wordsA, wordsB, 2),
-                TrigramSimilarity = NgramSimilarity(wordsA, wordsB, 3),
-                CommonWords       = CommonWordTypes(wordsA, wordsB),
-                CommonBigrams     = CommonNgrams(wordsA, wordsB, 2)
+                NombreDocumentoA   = a.Nombre,
+                NombreDocumentoB   = b.Nombre,
+                SimilitudCoseno    = Coseno(palabrasA, palabrasB),
+                SimilitudJaccard   = Jaccard(palabrasA, palabrasB),
+                SimilitudBigramas  = SimilitudNgrama(palabrasA, palabrasB, 2),
+                SimilitudTrigramas = SimilitudNgrama(palabrasA, palabrasB, 3),
+                PalabrasComunes    = TiposPalabrasComunes(palabrasA, palabrasB),
+                BigramasComunes    = NgramasComunes(palabrasA, palabrasB, 2)
             };
-
-            return report;
         }
 
-        // ────────────────────────────────────────────────────────────────────
-        // Algorithm 1: Cosine Similarity on TF vectors
-        // ────────────────────────────────────────────────────────────────────
+        // ─── Algoritmo 1: Similitud Coseno (vectores de frecuencia TF) ──────
 
-        private static double Cosine(List<string> a, List<string> b)
+        private static double Coseno(List<string> a, List<string> b)
         {
             if (a.Count == 0 || b.Count == 0) return 0;
 
-            var freqA = TermFrequency(a);
-            var freqB = TermFrequency(b);
+            var frecA = FrecuenciaTerminos(a);
+            var frecB = FrecuenciaTerminos(b);
+            var todosTerminos = frecA.Keys.Union(frecB.Keys).ToList();
 
-            var allTerms = freqA.Keys.Union(freqB.Keys).ToList();
+            double productoPunto = todosTerminos.Sum(t => Obtener(frecA, t) * Obtener(frecB, t));
+            double normaA = Math.Sqrt(frecA.Values.Sum(v => v * v));
+            double normaB = Math.Sqrt(frecB.Values.Sum(v => v * v));
 
-            double dot   = allTerms.Sum(t => Get(freqA, t) * Get(freqB, t));
-            double normA = Math.Sqrt(freqA.Values.Sum(v => v * v));
-            double normB = Math.Sqrt(freqB.Values.Sum(v => v * v));
-
-            if (normA == 0 || normB == 0) return 0;
-            return Math.Min(1.0, dot / (normA * normB));
+            if (normaA == 0 || normaB == 0) return 0;
+            return Math.Min(1.0, productoPunto / (normaA * normaB));
         }
 
-        // ────────────────────────────────────────────────────────────────────
-        // Algorithm 2: Jaccard Similarity on word type sets
-        // ────────────────────────────────────────────────────────────────────
+        // ─── Algoritmo 2: Similitud de Jaccard (conjuntos de tipos de palabras)
 
         private static double Jaccard(List<string> a, List<string> b)
         {
             if (a.Count == 0 || b.Count == 0) return 0;
 
-            var setA = new HashSet<string>(a);
-            var setB = new HashSet<string>(b);
+            var conjuntoA = new HashSet<string>(a);
+            var conjuntoB = new HashSet<string>(b);
+            int interseccion = conjuntoA.Intersect(conjuntoB).Count();
+            int union        = conjuntoA.Union(conjuntoB).Count();
 
-            int intersection = setA.Intersect(setB).Count();
-            int union        = setA.Union(setB).Count();
-
-            return union == 0 ? 0 : (double)intersection / union;
+            return union == 0 ? 0 : (double)interseccion / union;
         }
 
-        // ────────────────────────────────────────────────────────────────────
-        // Algorithm 3: N-gram Similarity
-        // ────────────────────────────────────────────────────────────────────
+        // ─── Algoritmo 3: Similitud de N-gramas (detección a nivel de frases)
 
-        private static double NgramSimilarity(List<string> a, List<string> b, int n)
+        private static double SimilitudNgrama(List<string> a, List<string> b, int n)
         {
-            var ngramsA = BuildNgrams(a, n);
-            var ngramsB = BuildNgrams(b, n);
+            var ngramasA = ConstruirNgramas(a, n);
+            var ngramasB = ConstruirNgramas(b, n);
 
-            if (ngramsA.Count == 0 || ngramsB.Count == 0) return 0;
+            if (ngramasA.Count == 0 || ngramasB.Count == 0) return 0;
 
-            var setA = new HashSet<string>(ngramsA);
-            var setB = new HashSet<string>(ngramsB);
+            var conjA = new HashSet<string>(ngramasA);
+            var conjB = new HashSet<string>(ngramasB);
+            int interseccion = conjA.Intersect(conjB).Count();
+            int union        = conjA.Union(conjB).Count();
 
-            int intersection = setA.Intersect(setB).Count();
-            int union        = setA.Union(setB).Count();
-
-            return union == 0 ? 0 : (double)intersection / union;
+            return union == 0 ? 0 : (double)interseccion / union;
         }
 
-        // ────────────────────────────────────────────────────────────────────
-        // Helpers
-        // ────────────────────────────────────────────────────────────────────
+        // ─── Métodos auxiliares ───────────────────────────────────────────────
 
-        private static List<string> CommonWordTypes(List<string> a, List<string> b)
+        private static List<string> TiposPalabrasComunes(List<string> a, List<string> b)
         {
-            var setA = new HashSet<string>(a);
-            var setB = new HashSet<string>(b);
-            return setA.Intersect(setB).OrderBy(w => w).ToList();
+            var conjA = new HashSet<string>(a);
+            var conjB = new HashSet<string>(b);
+            return conjA.Intersect(conjB).OrderBy(p => p).ToList();
         }
 
-        private static List<string> CommonNgrams(List<string> a, List<string> b, int n)
+        private static List<string> NgramasComunes(List<string> a, List<string> b, int n)
         {
-            var ngramsA = new HashSet<string>(BuildNgrams(a, n));
-            var ngramsB = new HashSet<string>(BuildNgrams(b, n));
-            return ngramsA.Intersect(ngramsB).OrderBy(g => g).Take(50).ToList();
+            var conjA = new HashSet<string>(ConstruirNgramas(a, n));
+            var conjB = new HashSet<string>(ConstruirNgramas(b, n));
+            return conjA.Intersect(conjB).OrderBy(g => g).Take(50).ToList();
         }
 
-        private static List<string> BuildNgrams(List<string> words, int n)
+        private static List<string> ConstruirNgramas(List<string> palabras, int n)
         {
-            var ngrams = new List<string>();
-            for (int i = 0; i <= words.Count - n; i++)
-                ngrams.Add(string.Join(" ", words.Skip(i).Take(n)));
-            return ngrams;
+            var ngramas = new List<string>();
+            for (int i = 0; i <= palabras.Count - n; i++)
+                ngramas.Add(string.Join(" ", palabras.Skip(i).Take(n)));
+            return ngramas;
         }
 
-        private static Dictionary<string, double> TermFrequency(List<string> words)
+        private static Dictionary<string, double> FrecuenciaTerminos(List<string> palabras)
         {
-            var freq = new Dictionary<string, double>();
-            foreach (var w in words)
-                freq[w] = freq.TryGetValue(w, out double v) ? v + 1 : 1;
-            return freq;
+            var frecuencia = new Dictionary<string, double>();
+            foreach (var p in palabras)
+                frecuencia[p] = frecuencia.TryGetValue(p, out double v) ? v + 1 : 1;
+            return frecuencia;
         }
 
-        private static double Get(Dictionary<string, double> d, string key)
-            => d.TryGetValue(key, out double v) ? v : 0;
+        private static double Obtener(Dictionary<string, double> dic, string clave)
+            => dic.TryGetValue(clave, out double v) ? v : 0;
     }
 }
