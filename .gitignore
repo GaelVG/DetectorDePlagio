@@ -1,0 +1,23 @@
+# Carpetas de compilación (se generan automáticamente)
+bin/
+obj/
+
+# Archivos de usuario de Visual Studio
+*.user
+*.suo
+.vs/
+
+# Archivos de caché de Rider/VS Code
+.idea/
+.vscode/
+
+# Archivos de NuGet
+*.nupkg
+packages/
+
+# Archivos de log
+*.log
+
+# Archivos temporales del sistema
+Thumbs.db
+.DS_Store
