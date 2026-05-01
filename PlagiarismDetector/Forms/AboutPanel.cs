@@ -6,7 +6,7 @@ namespace PlagiarismDetector.Forms
 {
     /// <summary>
     /// Panel de información del proyecto: descripción, objetivo, herramientas y algoritmos.
-    /// </summary>
+    /// </summary> hola prueba git
     public class PanelAcercaDe : Panel
     {
         public PanelAcercaDe()
