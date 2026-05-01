@@ -96,7 +96,7 @@ namespace PlagiarismDetector.Forms
             {
                 Location    = new Point(margen, 90 + tarjetaA.Height + 74),
                 Width       = tarjetaA.Width * 2 + margen,
-                Height      = 520,
+                Height      = 550,
                 BackColor   = EstilosApp.FondoPanel,
                 Visible     = false
             };
@@ -134,14 +134,14 @@ namespace PlagiarismDetector.Forms
             botonCargar = BotonEstilizado("📂  Cargar archivo…", EstilosApp.FondoPanel);
             botonCargar.Width    = 180;
             botonCargar.Height   = 34;
-            botonCargar.Location = new Point(14, 68);
+            botonCargar.Location = new Point(14, 76);
             tarjeta.Controls.Add(botonCargar);
 
             tarjeta.Controls.Add(new Label
             {
                 Text = "— o pega texto —", Font = EstilosApp.FuentePequena,
                 ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(202, 76)
+                AutoSize = true, Location = new Point(202, 84)
             });
 
             cajaVista = new TextBox
@@ -152,9 +152,9 @@ namespace PlagiarismDetector.Forms
                 BackColor   = EstilosApp.FondoOscuro,
                 ForeColor   = EstilosApp.TextoPrimario,
                 BorderStyle = BorderStyle.FixedSingle,
-                Location    = new Point(14, 108),
+                Location    = new Point(14, 120),
                 Width       = 390,
-                Height      = 188
+                Height      = 176
             };
             tarjeta.Controls.Add(cajaVista);
 
@@ -179,42 +179,42 @@ namespace PlagiarismDetector.Forms
             {
                 Text = "", Font = EstilosApp.FuenteEncabezado,
                 ForeColor = EstilosApp.TextoPrimario, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(m + 140, m + 10)
+                AutoSize = true, Location = new Point(m + 220, m + 10)
             };
             tarjeta.Controls.Add(_etiqVeredicto);
 
             // ── Métricas individuales ───────────────────────────────────────
-            _etiqCoseno    = EtiquetaMetrica("Coseno:",     new Point(m,       90), tarjeta);
-            _etiqJaccard   = EtiquetaMetrica("Jaccard:",    new Point(m,      118), tarjeta);
-            _etiqBigramas  = EtiquetaMetrica("Bigramas:",   new Point(m + 220, 90), tarjeta);
-            _etiqTrigramas = EtiquetaMetrica("Trigramas:",  new Point(m + 220,118), tarjeta);
+            _etiqCoseno    = EtiquetaMetrica("Coseno:",     new Point(m,      120), tarjeta);
+            _etiqJaccard   = EtiquetaMetrica("Jaccard:",    new Point(m,      148), tarjeta);
+            _etiqBigramas  = EtiquetaMetrica("Bigramas:",   new Point(m + 220,120), tarjeta);
+            _etiqTrigramas = EtiquetaMetrica("Trigramas:",  new Point(m + 220,148), tarjeta);
 
             tarjeta.Controls.Add(new Panel
             {
                 Height = 1, Width = tarjeta.Width - m * 2,
-                Location = new Point(m, 150), BackColor = EstilosApp.Borde
+                Location = new Point(m, 180), BackColor = EstilosApp.Borde
             });
 
             // ── Palabras comunes ────────────────────────────────────────────
-            AgregarSubtitulo(tarjeta, "Palabras en común", new Point(m, 162));
-            _listaPalabrasComunes = ListaEstilizada(new Point(m, 186), 200, 140, tarjeta);
+            AgregarSubtitulo(tarjeta, "Palabras en común", new Point(m, 192));
+            _listaPalabrasComunes = ListaEstilizada(new Point(m, 216), 200, 140, tarjeta);
 
             // ── Bigramas comunes ────────────────────────────────────────────
-            AgregarSubtitulo(tarjeta, "Frases comunes (bigramas)", new Point(m + 220, 162));
-            _listaBigramasComunes = ListaEstilizada(new Point(m + 220, 186), 340, 140, tarjeta);
+            AgregarSubtitulo(tarjeta, "Frases comunes (bigramas)", new Point(m + 220, 192));
+            _listaBigramasComunes = ListaEstilizada(new Point(m + 220, 216), 340, 140, tarjeta);
 
             tarjeta.Controls.Add(new Panel
             {
                 Height = 1, Width = tarjeta.Width - m * 2,
-                Location = new Point(m, 336), BackColor = EstilosApp.Borde
+                Location = new Point(m, 366), BackColor = EstilosApp.Borde
             });
 
             // ── Tokens por documento ────────────────────────────────────────
-            AgregarSubtitulo(tarjeta, "Tokens – Documento A", new Point(m, 348));
-            _listaTokensA = ListaEstilizada(new Point(m, 372), 200, 120, tarjeta);
+            AgregarSubtitulo(tarjeta, "Tokens – Documento A", new Point(m, 378));
+            _listaTokensA = ListaEstilizada(new Point(m, 402), 200, 120, tarjeta);
 
-            AgregarSubtitulo(tarjeta, "Tokens – Documento B", new Point(m + 220, 348));
-            _listaTokensB = ListaEstilizada(new Point(m + 220, 372), 200, 120, tarjeta);
+            AgregarSubtitulo(tarjeta, "Tokens – Documento B", new Point(m + 220, 378));
+            _listaTokensB = ListaEstilizada(new Point(m + 220, 402), 200, 120, tarjeta);
         }
 
         // ─── Eventos ───────────────────────────────────────────────────────────

@@ -44,7 +44,7 @@ namespace PlagiarismDetector.Forms
         // ─── Construcción de la interfaz ───────────────────────────────────────
         private void ConstruirDisposicion()
         {
-            // ── Barra lateral ────────────────────────────────────────────────
+            // ── Barra lateral (sin Dock en hijos — solo coordenadas absolutas) ──
             _barraLateral = new Panel
             {
                 Width     = EstilosApp.AnchoBarraLateral,
@@ -52,40 +52,67 @@ namespace PlagiarismDetector.Forms
                 BackColor = EstilosApp.BarraLateral
             };
 
-            // Logo / nombre de la app
+            // ── Sección logo — TableLayoutPanel garantiza sin solapamiento ────
             var panelLogo = new Panel
             {
+                Location  = new Point(0, 0),
+                Width     = EstilosApp.AnchoBarraLateral,
                 Height    = 80,
-                Dock      = DockStyle.Top,
                 BackColor = EstilosApp.FondoPanel
             };
-            panelLogo.Controls.Add(new Label
+
+            // TableLayoutPanel: col0=50px (emoji), col1=resto (texto)
+            var tbl = new TableLayoutPanel
             {
-                Text = "🔎", Font = new Font("Segoe UI", 22f),
-                ForeColor = EstilosApp.Acento, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(14, 8)
-            });
-            panelLogo.Controls.Add(new Label
+                Location    = new Point(0, 0),
+                Width       = EstilosApp.AnchoBarraLateral,
+                Height      = 80,
+                ColumnCount = 2,
+                RowCount    = 1,
+                BackColor   = Color.Transparent
+            };
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50));   // emoji
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,  100));  // texto
+            tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            tbl.Controls.Add(new Label
             {
-                Text = "Detector\nde Plagio",
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                ForeColor = EstilosApp.TextoPrimario, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(50, 16)
-            });
+                Text      = "🔎",
+                Font      = new Font("Segoe UI Emoji", 18f),
+                ForeColor = EstilosApp.Acento,
+                BackColor = Color.Transparent,
+                Dock      = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            }, 0, 0);
+
+            tbl.Controls.Add(new Label
+            {
+                Text      = "Detector\nde Plagio",
+                Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
+                ForeColor = EstilosApp.TextoPrimario,
+                BackColor = Color.Transparent,
+                Dock      = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
+            }, 1, 0);
+
+            panelLogo.Controls.Add(tbl);
             _barraLateral.Controls.Add(panelLogo);
 
-            // Etiqueta de sección
+            // ── Etiqueta "NAVEGACIÓN" (y=88) ─────────────────────────────────
             _barraLateral.Controls.Add(new Label
             {
-                Text = "NAVEGACIÓN", Font = new Font("Segoe UI", 7.5f),
-                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(14, 96)
+                Text      = "NAVEGACIÓN",
+                Font      = new Font("Segoe UI", 7.5f),
+                ForeColor = EstilosApp.TextoSecundario,
+                BackColor = Color.Transparent,
+                AutoSize  = true,
+                Location  = new Point(14, 90)
             });
 
-            // Botones de navegación
-            _btnAnalizador = BotonNavegacion("🔍  Analizar",    120);
-            _btnAlfabeto   = BotonNavegacion("Σ  Alfabeto",     160);
-            _btnAcercaDe   = BotonNavegacion("ℹ️  Acerca de",  200);
+            // ── Botones de navegación (y=110, 152, 194) ───────────────────────
+            _btnAnalizador = BotonNavegacion("🔍  Analizar",   110);
+            _btnAlfabeto   = BotonNavegacion("Σ  Alfabeto",    152);
+            _btnAcercaDe   = BotonNavegacion("ℹ️  Acerca de", 194);
 
             _btnAnalizador.Click += (_, _) => MostrarPanel(_panelAnalizador, _btnAnalizador);
             _btnAlfabeto.Click   += (_, _) => MostrarPanel(_panelAlfabeto,   _btnAlfabeto);
@@ -95,12 +122,15 @@ namespace PlagiarismDetector.Forms
             _barraLateral.Controls.Add(_btnAlfabeto);
             _barraLateral.Controls.Add(_btnAcercaDe);
 
-            // Versión al pie
+            // ── Versión al pie (anclada cerca del fondo) ─────────────────────
             _barraLateral.Controls.Add(new Label
             {
-                Text = "v1.0  –  .NET 8", Font = EstilosApp.FuentePequena,
-                ForeColor = EstilosApp.TextoSecundario, BackColor = Color.Transparent,
-                AutoSize = true, Location = new Point(14, 680)
+                Text      = "v1.0  –  .NET 8",
+                Font      = EstilosApp.FuentePequena,
+                ForeColor = EstilosApp.TextoSecundario,
+                BackColor = Color.Transparent,
+                AutoSize  = true,
+                Location  = new Point(14, 650)
             });
 
             // ── Área de contenido ────────────────────────────────────────────
@@ -119,10 +149,12 @@ namespace PlagiarismDetector.Forms
             };
             barraEncabezado.Controls.Add(new Label
             {
-                Text = "Sistema Detector de Plagio  |  Área: Tecnología – Compilador",
-                Font = EstilosApp.FuentePequena, ForeColor = EstilosApp.TextoSecundario,
-                BackColor = Color.Transparent, AutoSize = true,
-                Location = new Point(20, 12)
+                Text      = "Sistema Detector de Plagio  |  Área: Tecnología – Compilador",
+                Font      = EstilosApp.FuentePequena,
+                ForeColor = EstilosApp.TextoSecundario,
+                BackColor = Color.Transparent,
+                AutoSize  = true,
+                Location  = new Point(20, 12)
             });
             _areaContenido.Controls.Add(barraEncabezado);
 

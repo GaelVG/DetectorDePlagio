@@ -46,8 +46,8 @@ namespace PlagiarismDetector.Forms
             AgregarSeparador(contenedor, ref y, 20);
 
             // ── Grupos de símbolos ───────────────────────────────────────────
-            AgregarGrupoSimbolo(contenedor, "Letras minúsculas  (a-z)", Alfabeto.LetrasMinusculas, ref y);
-            AgregarGrupoSimbolo(contenedor, "Letras mayúsculas  (A-Z)", Alfabeto.LetrasMayusculas, ref y);
+            AgregarGrupoSimbolo(contenedor, "Letras minúsculas  (a-z, ñ, acentos)", Alfabeto.LetrasMinusculas, ref y);
+            AgregarGrupoSimbolo(contenedor, "Letras mayúsculas  (A-Z, Ñ, acentos)", Alfabeto.LetrasMayusculas, ref y);
             AgregarGrupoSimbolo(contenedor, "Dígitos  (0-9)",           Alfabeto.Digitos,           ref y);
             AgregarGrupoSimbolo(contenedor, "Caracteres especiales",    Alfabeto.CaracteresEspeciales, ref y);
             AgregarEtiqueta(contenedor, "Espacio → ' '", EstilosApp.FuenteMono, EstilosApp.TextoSecundario, ref y, 8);

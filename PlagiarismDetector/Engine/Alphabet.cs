@@ -11,16 +11,16 @@ namespace PlagiarismDetector.Engine
     {
         // ─── Grupos de símbolos del Alfabeto Σ ────────────────────────────────
         public static readonly HashSet<char> LetrasMinusculas =
-            new HashSet<char>("abcdefghijklmnopqrstuvwxyz");
+            new HashSet<char>("abcdefghijklmnopqrstuvwxyzáéíóúüñ");
 
         public static readonly HashSet<char> LetrasMayusculas =
-            new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+            new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÜÑ");
 
         public static readonly HashSet<char> Digitos =
             new HashSet<char>("0123456789");
 
         public static readonly HashSet<char> CaracteresEspeciales =
-            new HashSet<char>("+-*/=(){};,_");
+            new HashSet<char>("+-*/=(){};,_.!?:\"'¿¡");
 
         public static readonly HashSet<char> EspaciosBlanco =
             new HashSet<char>(new[] { ' ', '\t', '\n', '\r' });
